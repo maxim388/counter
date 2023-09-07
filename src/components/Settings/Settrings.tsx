@@ -23,6 +23,7 @@ export const Settings: React.FC<SettingsPropsType> = ({
 }) => {
   let classNameInput =
     `${style.input} ` + error === "Incorrect value!" ? `${style.error}` : "";
+    
   return (
     <div className={style.wrapper}>
       <div className={style.styleInputSettings}>

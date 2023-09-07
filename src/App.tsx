@@ -3,6 +3,7 @@ import logo from "./logo.svg";
 import "./App.css";
 import { Counter } from "./components/Counter/Counter";
 import { Settings } from "./components/Settings/Settrings";
+import { useDispatch, useSelector } from "react-redux";
 
 // Кнопка inc дизайбл при 5 (установленное значение max) +
 // Число в окошке становиться красным при 5 (установленное значение max) +
@@ -23,6 +24,7 @@ import { Settings } from "./components/Settings/Settrings";
 //
 
 export const App: React.FC<{}> = () => {
+  ///_______
   type InitialStatetype = {
     inc: boolean;
     reset: boolean;
@@ -39,6 +41,13 @@ export const App: React.FC<{}> = () => {
   const [startValue, setStartValue] = useState<number>(0);
   const [error, setError] = useState<string>("");
   const [disable, setDisable] = useState(initialState);
+
+///^^^^^^^^^^^^^^^^^
+
+  const dispatch = useDispatch();
+  const state = useSelector((state) => state)
+
+
 
   useEffect(() => {
     let valueAsString = localStorage.getItem("counterValue");
