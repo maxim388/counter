@@ -1,12 +1,19 @@
-import { applyMiddleware, combineReducers, legacy_createStore } from "redux";
-import thunk from "redux-thunk";
+import { combineReducers, legacy_createStore } from "redux";
 import { AppReducer } from "./counter-reducer";
+import { loadState, saveState } from "./localStorage";
 
 const rootReducer = combineReducers({
-  state: AppReducer,
+  counter: AppReducer,
 });
 
-export const store = legacy_createStore(rootReducer, applyMiddleware(thunk));
+const persistedState = loadState();
+
+export const store = legacy_createStore(rootReducer, persistedState);
+store.subscribe(() => {
+  saveState({
+    counter: store.getState().counter,
+  });
+});
 
 export type AppRootStateType = ReturnType<typeof rootReducer>;
 
