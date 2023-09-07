@@ -42,7 +42,7 @@ export const Settings: React.FC<SettingsPropsType> = ({
           type={"number"}
           onChange={(e) => onChangeStartValueHandler(e)}
         />
-      </div>
+      </div> 
       <Button title={"SET"} onClick={onClickSet} disabled={disabledSet} />
     </div>
   );
