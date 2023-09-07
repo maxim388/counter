@@ -4,6 +4,8 @@ import "./App.css";
 import { Counter } from "./components/Counter/Counter";
 import { Settings } from "./components/Settings/Settrings";
 import { useDispatch, useSelector } from "react-redux";
+import { setCountAC } from "./store/counter-reducer";
+import { AppRootStateType } from "./store/store";
 
 // Кнопка inc дизайбл при 5 (установленное значение max) +
 // Число в окошке становиться красным при 5 (установленное значение max) +
@@ -42,13 +44,25 @@ export const App: React.FC<{}> = () => {
   const [error, setError] = useState<string>("");
   const [disable, setDisable] = useState(initialState);
 
-///^^^^^^^^^^^^^^^^^
+  ///^^^^^^^^^^^^^^^^^
 
   const dispatch = useDispatch();
-  const state = useSelector((state) => state)
 
+  // const count = useSelector<AppRootStateType>((state) => state.state.count);
+  // const maxValue = useSelector<AppRootStateType>(
+  //   (state) => state.state.maxValue
+  // );
+  // const startValue = useSelector<AppRootStateType>(
+  //   (state) => state.state.startValue
+  // );
+  // const error = useSelector<AppRootStateType>(
+  //   (state) => state.state.errorMessage
+  // );
+  // const disable = useSelector<AppRootStateType>(
+  //   (state) => state.state.disableButton
+  // );
 
-
+  
   useEffect(() => {
     let valueAsString = localStorage.getItem("counterValue");
     if (valueAsString) {
@@ -68,6 +82,18 @@ export const App: React.FC<{}> = () => {
     if (newCount === maxValue) setDisable((prev) => ({ ...prev, inc: true }));
     if (newCount !== startValue)
       setDisable((prev) => ({ ...prev, reset: false }));
+  };
+
+  const onClickIncRedux = () => {
+    let newCount = count + 1;
+    dispatch(setCountAC(newCount));
+
+    if (newCount === maxValue) {
+      setDisable((prev) => ({ ...prev, inc: true }));
+    }
+    if (newCount !== startValue) {
+      setDisable((prev) => ({ ...prev, reset: false }));
+    }
   };
 
   const onClickReset = () => {

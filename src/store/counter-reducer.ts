@@ -3,30 +3,36 @@ const SET_MAX_VALUE = "SET_MAX_VALUE";
 const SET_START_VALUE = "SET_START_VALUE";
 const SET_DISABLE_BUTTONS = "SET_DISABLE_BUTTONS";
 
-type InitialStateType = {
+type DisableButtonType = {
+  inc: boolean;
+  reset: boolean;
+  set: boolean;
+};
+
+type AppRootStateType = {
   count: number;
   maxValue: number;
   startValue: number;
   errorMessage: string;
-  disableButtonInc: boolean;
-  disableButtonReset: boolean;
-  disableButtonSet: boolean;
+  disableButton: DisableButtonType;
 };
 
-const initialState: InitialStateType = {
+const initialState: AppRootStateType = {
   count: 0,
   maxValue: 5,
   startValue: 0,
   errorMessage: "",
-  disableButtonInc: false,
-  disableButtonReset: true,
-  disableButtonSet: true,
+  disableButton: {
+    inc: false,
+    reset: true,
+    set: true,
+  },
 };
 
-export const counterReducer = (
-  state: InitialStateType = initialState,
+export const AppReducer = (
+  state: AppRootStateType = initialState,
   action: ActionsType
-): InitialStateType => {
+): AppRootStateType => {
   switch (action.type) {
     case SET_COUNT:
       return state;
@@ -42,10 +48,23 @@ export const counterReducer = (
   }
 };
 
-type ActionsType = SetCountType | SetMaxValueType | SetStartValueType;
+type ActionsType =
+  | SetErrorType
+  | SetCountType
+  | SetMaxValueType
+  | SetStartValueType;
+
+type SetErrorType = ReturnType<typeof setErrorAC>;
 type SetCountType = ReturnType<typeof setCountAC>;
 type SetMaxValueType = ReturnType<typeof setMaxValueAC>;
 type SetStartValueType = ReturnType<typeof setStartValueAC>;
+
+export const setErrorAC = (errorMessage: string) => {
+  return {
+    type: SET_COUNT,
+    errorMessage,
+  };
+};
 
 export const setCountAC = (count: number) => {
   return {
@@ -68,10 +87,9 @@ export const setStartValueAC = (startValue: number) => {
   };
 };
 
-export const setDisableAC = (buttonId: number, disable: boolean) => {
+export const setDisableAC = (disableButton: DisableButtonType) => {
   return {
     type: SET_DISABLE_BUTTONS,
-    buttonId,
-    disable,
+    disableButton,
   };
 };
