@@ -1,8 +1,17 @@
-import React, { ChangeEvent, useEffect, useState } from "react";
-import logo from "./logo.svg";
+import React, { ChangeEvent, useCallback } from "react";
 import "./App.css";
 import { Counter } from "./components/Counter/Counter";
 import { Settings } from "./components/Settings/Settrings";
+import { useDispatch, useSelector } from "react-redux";
+import {
+  StateType,
+  setCountAC,
+  setDisableAC,
+  setErrorAC,
+  setMaxValueAC,
+  setStartValueAC,
+} from "./store/counter-reducer";
+import { AppRootStateType } from "./store/store";
 
 // Кнопка inc дизайбл при 5 (установленное значение max) +
 // Число в окошке становиться красным при 5 (установленное значение max) +
@@ -14,118 +23,93 @@ import { Settings } from "./components/Settings/Settrings";
 // Start value нельзя изменять на отрицательные числа (красным текст в Counter " Incorrect value! ") + дизайбл всех кнопок
 // Max value нельзя изменять на идентичное Start value (красным текст в Counter " Incorrect value! ") + дизайбл всех кнопок
 // Button универсальная +
-//
-//
 // ________________________________
 //
 // Объеденить (наложить) калькулятор и настройки
-//
-//
 
 export const App: React.FC<{}> = () => {
-  type InitialStatetype = {
-    inc: boolean;
-    reset: boolean;
-    set: boolean;
-  };
-  const initialState: InitialStatetype = {
-    inc: false,
-    reset: true,
-    set: true,
-  };
+  const dispatch = useDispatch();
 
-  const [count, setCount] = useState<number>(0);
-  const [maxValue, setMaxValue] = useState<number>(5);
-  const [startValue, setStartValue] = useState<number>(0);
-  const [error, setError] = useState<string>("");
-  const [disable, setDisable] = useState(initialState);
+  const { count, maxValue, startValue, errorMessage, disableButton } =
+    useSelector<AppRootStateType, StateType>((state) => state.counter);
 
-  useEffect(() => {
-    let valueAsString = localStorage.getItem("counterValue");
-    if (valueAsString) {
-      let newValue = JSON.parse(valueAsString);
-      setCount(newValue);
-    }
-  }, []);
-
-  useEffect(() => {
-    localStorage.setItem("counterValue", JSON.stringify(count));
-  }, [count]);
-
-  const onClickInc = () => {
+  const onClickInc = useCallback(() => {
     let newCount = count + 1;
-    setCount(newCount);
+    dispatch(setCountAC(newCount));
 
-    if (newCount === maxValue) setDisable((prev) => ({ ...prev, inc: true }));
-    if (newCount !== startValue)
-      setDisable((prev) => ({ ...prev, reset: false }));
-  };
-
-  const onClickReset = () => {
-    setCount(startValue);
-    setDisable({ ...disable, reset: true, inc: false });
-  };
-
-  const onClickSet = () => {
-    setCount(startValue);
-    setError("");
-    setDisable({ inc: false, reset: true, set: true });
-  };
-
-  const errorHandler = (value: number, type: string): boolean => {
-    const error = (): boolean => {
-      setError("Incorrect value!");
-      setDisable({ inc: true, reset: true, set: true });
-      return true;
-    };
-    switch (type) {
-      case "max": {
-        if (value <= startValue) return error();
-        if (value < 0) return error();
-        return false;
-      }
-      case "start": {
-        if (value < 0) return error();
-        if (value >= maxValue) return error();
-        return false;
-      }
-      default:
-        return false;
+    if (newCount === maxValue) {
+      dispatch(setDisableAC({ inc: true }));
     }
-  };
-
-  const onChangeMaxValueHandler = (e: ChangeEvent<HTMLInputElement>) => {
-    let value = +e.currentTarget.value;
-    let error = errorHandler(value, "max");
-    generaOnChangeValetHandler(error, value, setMaxValue);
-  };
-  const onChangeStartValueHandler = (e: ChangeEvent<HTMLInputElement>) => {
-    let value = +e.currentTarget.value;
-    let error = errorHandler(value, "start");
-    generaOnChangeValetHandler(error, value, setStartValue);
-  };
-
-  const generaOnChangeValetHandler = (
-    error: boolean,
-    value: number,
-    callBack: (value: number) => void
-  ) => {
-    if (error) {
-      setError("Incorrect value!");
-    } else {
-      callBack(value);
-      setError("enter values and press `set`");
-      setDisable({ inc: true, reset: true, set: false });
+    if (newCount !== startValue) {
+      dispatch(setDisableAC({ reset: false }));
     }
-  };
+  }, [dispatch, count, maxValue, startValue]);
+
+  const onClickReset = useCallback(() => {
+    dispatch(setCountAC(startValue));
+    dispatch(setDisableAC({ reset: true, inc: false }));
+  }, [dispatch, startValue]);
+
+  const onClickSet = useCallback(() => {
+    dispatch(setCountAC(startValue));
+    dispatch(setErrorAC(""));
+    dispatch(setDisableAC({ inc: false, reset: true, set: true }));
+  }, [dispatch, startValue]);
+
+  const errorHandlerForNotValidNumbers = useCallback(() => {
+    dispatch(setErrorAC("Incorrect value!"));
+    dispatch(setDisableAC({ inc: true, reset: true, set: true }));
+  }, [dispatch]);
+
+  const errorHandlerForValidNumbers = useCallback(() => {
+    dispatch(setErrorAC("enter values and press `set`"));
+    dispatch(setDisableAC({ inc: true, reset: true, set: false }));
+  }, [dispatch]);
+
+  const onChangeMaxValueHandler = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      let value = Number(e.currentTarget.value);
+      dispatch(setMaxValueAC(value));
+      if (value <= startValue || value < 0 || startValue < 0) {
+        errorHandlerForNotValidNumbers();
+      } else {
+        errorHandlerForValidNumbers();
+      }
+    },
+    [
+      dispatch,
+      startValue,
+      errorHandlerForNotValidNumbers,
+      errorHandlerForValidNumbers,
+    ]
+  );
+
+  const onChangeStartValueHandler = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      let value = Number(e.currentTarget.value);
+      dispatch(setStartValueAC(value));
+      if (value < 0 || value >= maxValue) {
+        errorHandlerForNotValidNumbers();
+      } else {
+        errorHandlerForValidNumbers();
+      }
+    },
+    [
+      dispatch,
+      maxValue,
+      errorHandlerForNotValidNumbers,
+      errorHandlerForValidNumbers,
+    ]
+  );
+
   return (
     <div className="App">
       <header className="App-header">
         <Settings
           maxValue={maxValue}
           startValue={startValue}
-          disabledSet={disable.set}
-          error={error}
+          disabledSet={disableButton.set}
+          error={errorMessage}
           onClickSet={onClickSet}
           onChangeMaxValueHandler={onChangeMaxValueHandler}
           onChangeStartValueHandler={onChangeStartValueHandler}
@@ -133,10 +117,9 @@ export const App: React.FC<{}> = () => {
         <Counter
           count={count}
           maxValue={maxValue}
-          startValue={startValue}
-          disabledInc={disable.inc}
-          disabledReset={disable.reset}
-          error={error}
+          disabledInc={disableButton.inc}
+          disabledReset={disableButton.reset}
+          error={errorMessage}
           onClickInc={onClickInc}
           onClickReset={onClickReset}
         />
