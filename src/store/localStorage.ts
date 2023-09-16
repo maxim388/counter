@@ -17,6 +17,6 @@ export const saveState = (state: AppRootStateType) => {
     const serializedState = JSON.stringify(state);
     localStorage.setItem("state", serializedState);
   } catch {
-    // ignore write errors
+    throw new Error("Error to saveState function")
   }
 };
